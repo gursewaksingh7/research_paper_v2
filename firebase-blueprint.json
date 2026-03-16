@@ -1,0 +1,57 @@
+{
+  "entities": {
+    "Session": {
+      "title": "Session",
+      "description": "A live classroom session",
+      "type": "object",
+      "properties": {
+        "teacherId": { "type": "string" },
+        "teacherName": { "type": "string" },
+        "createdAt": { "type": "number" },
+        "isActive": { "type": "boolean" },
+        "code": { "type": "string", "description": "6-digit OTP code" }
+      },
+      "required": ["teacherId", "teacherName", "createdAt", "isActive", "code"]
+    },
+    "Transcript": {
+      "title": "Transcript",
+      "description": "A single transcript item in a session",
+      "type": "object",
+      "properties": {
+        "speakerId": { "type": "string" },
+        "speakerName": { "type": "string" },
+        "timestamp": { "type": "number" },
+        "originalText": { "type": "string" },
+        "translatedText": { "type": "string" },
+        "originalLang": { "type": "string" },
+        "isFinal": { "type": "boolean" }
+      },
+      "required": ["speakerId", "speakerName", "timestamp", "originalText", "isFinal"]
+    },
+    "Participant": {
+      "title": "Participant",
+      "description": "A student joined in a session",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "joinedAt": { "type": "number" },
+        "isOnline": { "type": "boolean" }
+      },
+      "required": ["name", "joinedAt", "isOnline"]
+    }
+  },
+  "firestore": {
+    "/sessions/{sessionId}": {
+      "schema": "Session",
+      "description": "Live sessions indexed by a unique ID (or the code itself)"
+    },
+    "/sessions/{sessionId}/transcripts/{transcriptId}": {
+      "schema": "Transcript",
+      "description": "Transcripts for a specific session"
+    },
+    "/sessions/{sessionId}/participants/{participantId}": {
+      "schema": "Participant",
+      "description": "Participants in a specific session"
+    }
+  }
+}

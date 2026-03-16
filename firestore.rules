@@ -1,0 +1,58 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isValidSession(data) {
+      return data.teacherId is string &&
+             data.teacherName is string &&
+             data.teacherName.size() > 0 &&
+             data.teacherName.size() < 100 &&
+             data.code is string &&
+             data.code.matches('^[0-9]{6}$') &&
+             data.createdAt is number &&
+             data.isActive is bool;
+    }
+
+    function isValidTranscript(data) {
+      return data.speakerId is string &&
+             data.speakerName is string &&
+             data.speakerName.size() > 0 &&
+             data.originalText is string &&
+             data.timestamp is number &&
+             data.isFinal is bool;
+    }
+
+    function isValidParticipant(data) {
+      return data.name is string &&
+             data.name.size() > 0 &&
+             data.joinedAt is number &&
+             data.isOnline is bool;
+    }
+
+    match /sessions/{sessionId} {
+      // Anyone authenticated can read a session (to join it)
+      allow read: if isAuthenticated();
+      
+      // Only the teacher (creator) can create/update the session
+      allow create: if isAuthenticated() && isValidSession(request.resource.data) && request.resource.data.teacherId == request.auth.uid;
+      allow update: if isAuthenticated() && isValidSession(request.resource.data) && resource.data.teacherId == request.auth.uid;
+
+      match /transcripts/{transcriptId} {
+        // Anyone in the session can read transcripts
+        allow read: if isAuthenticated();
+        // Only the teacher (or speaker) can write transcripts
+        allow create, update: if isAuthenticated() && isValidTranscript(request.resource.data);
+      }
+
+      match /participants/{participantId} {
+        allow read: if isAuthenticated();
+        allow create, update: if isAuthenticated() && isValidParticipant(request.resource.data) && participantId == request.auth.uid;
+      }
+    }
+  }
+}
